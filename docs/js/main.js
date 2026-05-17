@@ -34,11 +34,11 @@ function loadHeaderModule() {
             </div>
 
             <nav class="nav-links">
-                <a href="/index.html" class="nav-link ${activeNav === "scan" ? "active" : ""}">
+                <a href="index.html" class="nav-link ${activeNav === "scan" ? "active" : ""}">
                     Scan
                 </a>
 
-                <a href="/dashboard.html" class="nav-link ${activeNav === "dashboard" ? "active" : ""}">
+                <a href="dashboard.html" class="nav-link ${activeNav === "dashboard" ? "active" : ""}">
                     Dashboard
                 </a>
             </nav>
@@ -62,7 +62,7 @@ function loadHeaderModule() {
 
     if (loginBtn) {
         loginBtn.addEventListener("click", () => {
-            window.location.href = "/login.html";
+            window.location.href = "login.html";
         });
     }
 
@@ -72,7 +72,7 @@ function loadHeaderModule() {
         logoutBtn.addEventListener("click", () => {
             localStorage.removeItem("ethiscan_user");
             localStorage.removeItem("ethiscan_token");
-            window.location.href = "/index.html";
+            window.location.href = "index.html";
         });
     }
 }
