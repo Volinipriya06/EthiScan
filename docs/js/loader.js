@@ -12,7 +12,7 @@ function initializeAuthForms() {
     if (loginForm) {
         loginForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            fetch("/api/auth/login", {
+            fetch("https://ethiscan-dz9i.onrender.com/api/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -36,7 +36,7 @@ function initializeAuthForms() {
     if (registerForm) {
         registerForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            fetch("/api/auth/register", {
+            fetch("https://ethiscan-dz9i.onrender.com/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -63,7 +63,7 @@ function loadDashboardMetrics() {
     const headers = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    fetch("/api/telemetry/metrics", { headers })
+    fetch("https://ethiscan-dz9i.onrender.com/api/telemetry/metrics", { headers })
         .then(res => res.json())
         .then(data => {
             document.getElementById("totalBrandsCount").textContent = data.total;
@@ -77,7 +77,7 @@ function loadDashboardMetrics() {
             document.getElementById("unethicalPct").textContent = `${Math.round((data.unethical/base)*100)}% of catalog`;
         });
 
-    fetch("/api/telemetry/history", { headers })
+    fetch("https://ethiscan-dz9i.onrender.com/api/telemetry/history", { headers })
         .then(res => res.json())
         .then(data => {
             const searchBody = document.getElementById("searchHistoryTableBody");
