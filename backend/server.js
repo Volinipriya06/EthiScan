@@ -4,6 +4,7 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 require("dotenv").config();
 
 const express = require("express");
+const cors = require("cors"); 
 const path = require("path");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
@@ -16,6 +17,14 @@ const scrapeBrandData = require("./services/webScraper");
 const analyzeWithAI = require("./services/aiAnalyzer");
 
 const app = express();
+
+const corsOptions = {
+    origin: ['https://volinipriya06.github.io', 'http://localhost:5000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+app.use(cors(corsOptions)); 
 
 app.use(express.json());
 
@@ -143,7 +152,6 @@ app.get(
 
             const aiAnalysis = await analyzeWithAI(brandName, webData);
 
-            // FIX: Safely checks both id and _id variables from your token payload
             const historyEntry = new SearchHistory({
                 query: brandName,
                 status:
@@ -178,7 +186,6 @@ app.get(
     parseAuthToken,
     async (req, res) => {
         try {
-            // FIX: Filters history using the same payload parsing structure
             const filter = req.user
                 ? { userId: (req.user.id || req.user._id) }
                 : { userId: null };
