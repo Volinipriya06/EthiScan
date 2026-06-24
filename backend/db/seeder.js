@@ -18,8 +18,7 @@ BrandSchema.index({ barcode: 1 });
 const Brand = mongoose.model("Brand", BrandSchema);
 
 const runSeeder = async () => {
-    // Falls back to your connection string if environment variable isn't fully initialized
-    const backupUri = "mongodb+srv://naturereplicate8068_db_user:gMdsjmTdBpU5TIJv@cluster0.n9n43d9.mongodb.net/ethiscan?appName=Cluster0";
+    const backupUri = "mongodb+srv://Volinipriya06:volinipriya06@ethiscan-db.dbij92s.mongodb.net/EthiScan";
     process.env.MONGO_URI = process.env.MONGO_URI || backupUri;
     
     await connectDatabase();
