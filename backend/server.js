@@ -110,10 +110,12 @@ app.post("/api/auth/forgot-password", async (req, res) => {
         }
 
         const user = await User.findOne({ email });
-        const message = "If this email belongs to an EthiScan account, a reset link has been prepared.";
 
         if (!user) {
-            return res.json({ success: true, message });
+            return res.json({
+                success: true,
+                message: "No account was found for this email. Create an account first, then request a reset link."
+            });
         }
 
         const resetToken = crypto.randomBytes(32).toString("hex");
@@ -129,7 +131,11 @@ app.post("/api/auth/forgot-password", async (req, res) => {
 
         console.log(`Password reset link for ${email}: ${resetLink}`);
 
-        res.json({ success: true, message, resetLink });
+        res.json({
+            success: true,
+            message: "Reset link prepared.",
+            resetLink
+        });
     } catch (err) {
         console.error("FORGOT PASSWORD ERROR:", err);
         res.status(500).json({ success: false, message: "Could not prepare password reset." });

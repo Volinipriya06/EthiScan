@@ -13,6 +13,24 @@ function showAuthMessage(message, type = "info") {
     target.className = `auth-message ${type}`;
 }
 
+function showAuthLink(message, linkText, href) {
+    const target = document.getElementById("authMessage");
+    if (!target) return;
+
+    target.textContent = "";
+    target.className = "auth-message success";
+
+    const copy = document.createElement("span");
+    copy.textContent = `${message} `;
+
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = linkText;
+    link.className = "auth-message-link";
+
+    target.append(copy, link);
+}
+
 async function fetchAuth(url, options = {}) {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
@@ -123,14 +141,15 @@ function initializeAuthForms() {
                 }
 
                 if (data.resetLink) {
-                    showAuthMessage("Reset link prepared. Opening password reset page...", "success");
-                    window.setTimeout(() => {
-                        window.location.href = data.resetLink;
-                    }, 900);
+                    showAuthLink(
+                        "Reset link prepared.",
+                        "Click here to reset your password",
+                        data.resetLink
+                    );
                     return;
                 }
 
-                showAuthMessage(data.message || "Reset link prepared.", "success");
+                showAuthMessage("No visible reset link was created. Register this email first, then request the reset link again.", "error");
             } catch (error) {
                 console.error("Forgot password error:", error);
                 showAuthMessage("Unable to connect to the server. Please try again shortly.", "error");
