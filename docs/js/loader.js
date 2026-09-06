@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const AUTH_API_BASE = "https://ethiscan-backend.onrender.com";
 const AUTH_TIMEOUT_MS = 10000;
+const AUTH_GUEST_HISTORY_KEY = "ethiscan_guest_search_history";
 
 function showAuthMessage(message, type = "info") {
     const target = document.getElementById("authMessage");
@@ -74,6 +75,7 @@ function initializeAuthForms() {
 
                 localStorage.setItem("ethiscan_token", data.token);
                 localStorage.setItem("ethiscan_user", JSON.stringify(data.user));
+                sessionStorage.removeItem(AUTH_GUEST_HISTORY_KEY);
 
                 window.location.href = "index.html";
             } catch (error) {

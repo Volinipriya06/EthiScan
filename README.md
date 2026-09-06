@@ -1,6 +1,6 @@
 # EthiScan — AI-Powered Ethical Brand Intelligence Platform
 
-EthiScan is an AI-powered web application that helps users understand the ethical and sustainability profile of brands. It combines web search intelligence, AI analysis, and user search history to provide an easy-to-understand ethical evaluation.
+EthiScan is a personal AI-powered ethical brand intelligence web application by Volini Priya. It helps users understand the sustainability and ethics profile of brands through live web intelligence, AI analysis, private account history, and a temporary guest mode.
 
 ## 🚀 Live Demo
 
@@ -33,9 +33,17 @@ EthiScan is an AI-powered web application that helps users understand the ethica
 - Passwords are securely hashed using bcrypt.
 
 ### 📊 Dashboard & Search History
-- Stores authenticated users' search history.
-- Displays ethical, warning, and unethical search statistics.
-- Provides a personal dashboard for reviewing previous searches.
+- Saves search history only for logged-in users.
+- Links each saved search to the authenticated user's private account ID.
+- Shows guest searches only temporarily in the current tab session.
+- Provides direct dashboard links to reopen previous brand results.
+
+### 🛡️ Privacy & Key Security
+- Guest searches are never saved to MongoDB.
+- Users can only load their own private search history.
+- JWT authentication is required for account history access.
+- API keys, database URIs, and JWT secrets must stay in environment variables.
+- Hardcoded production secrets are not allowed in committed source code.
 
 ### 🎨 Modern Interface
 - Dark futuristic UI.
@@ -137,7 +145,7 @@ npm install
 
 ### 4. Configure Environment Variables
 
-Create a `.env` file inside the `backend` folder:
+Copy `backend/.env.example` to `backend/.env`, then add your real values locally or in Render environment variables:
 
 ```env
 MONGODB_URI=your_mongodb_connection_string
@@ -198,23 +206,28 @@ EthiScan/
 4. The backend collects relevant web information using Serper.
 5. OpenRouter AI analyzes the collected information.
 6. EthiScan generates an ethical score and supporting insights.
-7. Authenticated searches are stored in MongoDB Atlas.
-8. Users can view their search history and statistics on the dashboard.
+7. If the user is logged in, the backend saves the search with that user's ID.
+8. If the user is browsing as a guest, the backend does not save the search.
+9. Guest history is temporary and clears on refresh, tab close, or login.
+10. Logged-in users can view only their own private history on the dashboard.
 
 ---
 
-## 🔮 Future Improvements
+## Future Updates (To-Do List)
 
-- Barcode scanning support
-- Product-level ethical analysis
-- Browser extension integration
-- Mobile application
-- Community verification system
-- AI-powered ESG report generation
-- Personalized ethical preferences
-- Multi-language support
-- Advanced AI explainability
-- Real-time sustainability monitoring
+- Add a production email service for forgot-password reset links.
+- Add a user profile page for account details and ethical preferences.
+- Add stronger dashboard filters by date, score, and brand category.
+- Add export options for private history, such as CSV or PDF.
+- Add barcode scanning support.
+- Add product-level ethical analysis.
+- Add AI-powered ESG report generation.
+- Add community verification and user-submitted evidence.
+- Add multi-language support.
+- Add admin moderation for reported or uncertain brand results.
+- Add stricter rate limiting for auth and brand-analysis endpoints.
+- Add automated security scanning before deployment.
+- Rotate any keys that were ever exposed and keep all secrets in Render environment variables only.
 
 ---
 

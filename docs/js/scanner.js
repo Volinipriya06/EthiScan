@@ -1,8 +1,19 @@
 const ETHISCAN_API_BASE = "https://ethiscan-backend.onrender.com";
-const ETHISCAN_HISTORY_KEY = "ethiscan_search_history";
+const ETHISCAN_GUEST_HISTORY_KEY = "ethiscan_guest_search_history";
 const ETHISCAN_TIMEOUT_MS = 20000;
 
+function wasPageRefreshed() {
+    const navigation = performance.getEntriesByType("navigation")[0];
+    return navigation
+        ? navigation.type === "reload"
+        : performance.navigation.type === performance.navigation.TYPE_RELOAD;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    if (wasPageRefreshed()) {
+        sessionStorage.removeItem(ETHISCAN_GUEST_HISTORY_KEY);
+    }
+
     const searchPlaceholder = document.getElementById("search-placeholder");
 
     if (!searchPlaceholder) return;
@@ -42,14 +53,16 @@ function getStatusFromScore(score) {
 
 function getLocalHistory() {
     try {
-        return JSON.parse(localStorage.getItem(ETHISCAN_HISTORY_KEY) || "[]");
+        return JSON.parse(sessionStorage.getItem(ETHISCAN_GUEST_HISTORY_KEY) || "[]");
     } catch (error) {
-        localStorage.removeItem(ETHISCAN_HISTORY_KEY);
+        sessionStorage.removeItem(ETHISCAN_GUEST_HISTORY_KEY);
         return [];
     }
 }
 
-function saveLocalSearch(brand, query) {
+function saveGuestSearch(brand, query) {
+    if (localStorage.getItem("ethiscan_token")) return;
+
     const score = Number(brand.ethicalScore) || 0;
     const entry = {
         query,
@@ -67,7 +80,7 @@ function saveLocalSearch(brand, query) {
         )
     ].slice(0, 25);
 
-    localStorage.setItem(ETHISCAN_HISTORY_KEY, JSON.stringify(nextHistory));
+    sessionStorage.setItem(ETHISCAN_GUEST_HISTORY_KEY, JSON.stringify(nextHistory));
 }
 
 function buildOfflineBrand(query) {
@@ -151,18 +164,18 @@ function initializeScannerEvents() {
 
             if (!response.ok || !data.success) {
                 const offlineBrand = buildOfflineBrand(val);
-                saveLocalSearch(offlineBrand, val);
+                saveGuestSearch(offlineBrand, val);
                 renderResultCard(offlineBrand);
                 return;
             }
 
-            saveLocalSearch(data.brand, val);
+            saveGuestSearch(data.brand, val);
             renderResultCard(data.brand);
         } catch (error) {
             console.error("Analysis error:", error);
 
             const offlineBrand = buildOfflineBrand(val);
-            saveLocalSearch(offlineBrand, val);
+            saveGuestSearch(offlineBrand, val);
             renderResultCard(offlineBrand);
         }
     }

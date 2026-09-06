@@ -1,14 +1,25 @@
 const API_BASE = window.location.hostname === "localhost"
     ? "http://localhost:5000"
     : "https://ethiscan-backend.onrender.com";
-const HISTORY_KEY = "ethiscan_search_history";
+const GUEST_HISTORY_KEY = "ethiscan_guest_search_history";
 const HISTORY_TIMEOUT_MS = 6000;
 
-function getLocalHistory() {
+function wasPageRefreshed() {
+    const navigation = performance.getEntriesByType("navigation")[0];
+    return navigation
+        ? navigation.type === "reload"
+        : performance.navigation.type === performance.navigation.TYPE_RELOAD;
+}
+
+if (wasPageRefreshed()) {
+    sessionStorage.removeItem(GUEST_HISTORY_KEY);
+}
+
+function getGuestHistory() {
     try {
-        return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+        return JSON.parse(sessionStorage.getItem(GUEST_HISTORY_KEY) || "[]");
     } catch (error) {
-        localStorage.removeItem(HISTORY_KEY);
+        sessionStorage.removeItem(GUEST_HISTORY_KEY);
         return [];
     }
 }
@@ -54,104 +65,16 @@ async function fetchHistory(url, options) {
     }
 }
 
-async function loadDashboard() {
-    const localHistory = getLocalHistory();
-
-    try {
-        const token = localStorage.getItem("ethiscan_token");
-
-        const response = await fetchHistory(`${API_BASE}/api/history`, {
-            headers: {
-                Authorization: token ? `Bearer ${token}` : ""
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to load history");
-        }
-
-        const history = mergeHistory(await response.json(), localHistory);
-        const tableBody = document.getElementById("searchHistoryTableBody");
-
-        tableBody.innerHTML = "";
-
-        let ethical = 0;
-        let warning = 0;
-        let unethical = 0;
-
-        if (history.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                        No search history yet.
-                    </td>
-                </tr>
-            `;
-        }
-
-        history.forEach(item => {
-            if (item.status === "ETHICAL") {
-                ethical++;
-            } else if (item.status === "WARNING") {
-                warning++;
-            } else if (item.status === "UNETHICAL") {
-                unethical++;
-            }
-
-            const statusClass = item.status.toLowerCase();
-
-            const resultUrl = `index.html?brand=${encodeURIComponent(item.query)}`;
-
-            tableBody.innerHTML += `
-                <tr>
-                    <td><strong>${item.query}</strong></td>
-                    <td style="color: var(--text-muted); font-size: 0.9rem;">
-                        ${new Date(item.createdAt).toLocaleString()}
-                    </td>
-                    <td>
-                        <span class="status-badge ${statusClass}">
-                            ${item.status}
-                        </span>
-                    </td>
-                    <td>
-                        <a class="history-action-link" href="${resultUrl}">
-                            View result
-                        </a>
-                    </td>
-                </tr>
-            `;
-        });
-
-        const total = history.length;
-
-        document.getElementById("totalBrands").textContent = total;
-        document.getElementById("ethicalCount").textContent = ethical;
-        document.getElementById("warningCount").textContent = warning;
-        document.getElementById("unethicalCount").textContent = unethical;
-
-        document.getElementById("ethicalPct").textContent = total
-            ? `${Math.round((ethical / total) * 100)}% of catalog`
-            : "0% of catalog";
-
-        document.getElementById("warningPct").textContent = total
-            ? `${Math.round((warning / total) * 100)}% of catalog`
-            : "0% of catalog";
-
-        document.getElementById("unethicalPct").textContent = total
-            ? `${Math.round((unethical / total) * 100)}% of catalog`
-            : "0% of catalog";
-    } catch (error) {
-        console.error("Dashboard error:", error);
-        renderLocalDashboard(localHistory);
-    }
-}
-
-function renderLocalDashboard(localHistory) {
-    const history = mergeHistory([], localHistory);
+function renderHistory(history, options = {}) {
     const tableBody = document.getElementById("searchHistoryTableBody");
+    const emptyMessage = options.emptyMessage || "No search history yet.";
     let ethical = 0;
     let warning = 0;
     let unethical = 0;
+
+    if (!tableBody) return;
+
+    tableBody.innerHTML = "";
 
     history.forEach(item => {
         if (item.status === "ETHICAL") ethical++;
@@ -159,33 +82,20 @@ function renderLocalDashboard(localHistory) {
         else warning++;
     });
 
-    const total = history.length;
-
-    document.getElementById("totalBrands").textContent = total;
-    document.getElementById("ethicalCount").textContent = ethical;
-    document.getElementById("warningCount").textContent = warning;
-    document.getElementById("unethicalCount").textContent = unethical;
-    document.getElementById("ethicalPct").textContent = total ? `${Math.round((ethical / total) * 100)}% of searches` : "0% of searches";
-    document.getElementById("warningPct").textContent = total ? `${Math.round((warning / total) * 100)}% of searches` : "0% of searches";
-    document.getElementById("unethicalPct").textContent = total ? `${Math.round((unethical / total) * 100)}% of searches` : "0% of searches";
-
-    if (!tableBody) return;
-
-    if (!history.length) {
+    if (history.length === 0) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                    No search history yet. Analyze a brand to add it here.
+                    ${emptyMessage}
                 </td>
             </tr>
         `;
-        return;
     }
 
-    tableBody.innerHTML = history.map(item => {
+    history.forEach(item => {
         const resultUrl = `index.html?brand=${encodeURIComponent(item.query)}`;
 
-        return `
+        tableBody.innerHTML += `
             <tr>
                 <td><strong>${item.query}</strong></td>
                 <td style="color: var(--text-muted); font-size: 0.9rem;">
@@ -203,7 +113,55 @@ function renderLocalDashboard(localHistory) {
                 </td>
             </tr>
         `;
-    }).join("");
+    });
+
+    const total = history.length;
+
+    document.getElementById("totalBrands").textContent = total;
+    document.getElementById("ethicalCount").textContent = ethical;
+    document.getElementById("warningCount").textContent = warning;
+    document.getElementById("unethicalCount").textContent = unethical;
+    document.getElementById("ethicalPct").textContent = total
+        ? `${Math.round((ethical / total) * 100)}% of searches`
+        : "0% of searches";
+    document.getElementById("warningPct").textContent = total
+        ? `${Math.round((warning / total) * 100)}% of searches`
+        : "0% of searches";
+    document.getElementById("unethicalPct").textContent = total
+        ? `${Math.round((unethical / total) * 100)}% of searches`
+        : "0% of searches";
+}
+
+async function loadDashboard() {
+    try {
+        const token = localStorage.getItem("ethiscan_token");
+
+        if (!token) {
+            renderHistory(mergeHistory([], getGuestHistory()), {
+                emptyMessage: "No guest searches in this tab. Guest history clears on refresh, tab close, and login."
+            });
+            return;
+        }
+
+        const response = await fetchHistory(`${API_BASE}/api/history`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to load history");
+        }
+
+        renderHistory(mergeHistory(await response.json(), []), {
+            emptyMessage: "No private account searches yet."
+        });
+    } catch (error) {
+        console.error("Dashboard error:", error);
+        renderHistory([], {
+            emptyMessage: "Sign in again to load your private history."
+        });
+    }
 }
 
 async function clearHistory() {
@@ -216,7 +174,7 @@ async function clearHistory() {
     }
 
     if (!token) {
-        localStorage.removeItem(HISTORY_KEY);
+        sessionStorage.removeItem(GUEST_HISTORY_KEY);
         loadDashboard();
         return;
     }
@@ -235,7 +193,6 @@ async function clearHistory() {
             throw new Error(result.message || "Failed to clear history");
         }
 
-        localStorage.removeItem(HISTORY_KEY);
         alert("Your search history has been cleared successfully.");
         loadDashboard();
     } catch (error) {

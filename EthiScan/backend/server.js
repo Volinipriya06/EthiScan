@@ -36,6 +36,14 @@ app.use(
 
 connectDatabase();
 
+function getJwtSecret() {
+    if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET is required.");
+    }
+
+    return process.env.JWT_SECRET;
+}
+
 function parseAuthToken(
     req,
     res,
@@ -62,9 +70,7 @@ function parseAuthToken(
 
                 token,
 
-                process.env.JWT_SECRET ||
-
-                "super_secure_telemetry_jwt_token_key_1101"
+                getJwtSecret()
             );
 
         req.user = decoded;
@@ -205,9 +211,7 @@ app.post(
                         user.name
                     },
 
-                    process.env.JWT_SECRET ||
-
-                    "super_secure_telemetry_jwt_token_key_1101",
+                    getJwtSecret(),
 
                     {
                         expiresIn:
@@ -270,38 +274,35 @@ app.get(
                     webData
                 );
 
-            const historyEntry =
-                new SearchHistory({
+            if (req.user) {
+                const historyEntry =
+                    new SearchHistory({
 
-                    query:
-                    brandName,
+                        query:
+                        brandName,
 
-                    status:
+                        status:
 
-                    aiAnalysis.ethicalScore >= 70
+                        aiAnalysis.ethicalScore >= 70
 
-                    ? "ETHICAL"
+                        ? "ETHICAL"
 
-                    : aiAnalysis.ethicalScore >= 40
+                        : aiAnalysis.ethicalScore >= 40
 
-                    ? "WARNING"
+                        ? "WARNING"
 
-                    : "UNETHICAL",
+                        : "UNETHICAL",
 
-                    userId:
+                        userId:
+                        req.user.id
+                    });
 
-                    req.user
+                await historyEntry.save();
 
-                    ? req.user.id
-
-                    : null
-                });
-
-            await historyEntry.save();
-
-            console.log(
-                "HISTORY SAVED"
-            );
+                console.log(
+                    "HISTORY SAVED"
+                );
+            }
 
             res.json({
 
@@ -341,23 +342,21 @@ app.get(
 
         try {
 
-            const filter =
-
-                req.user
-
-                ? {
-                    userId:
-                    req.user.id
-                }
-
-                : {
-                    userId:
-                    null
-                };
+            if (!req.user) {
+                return res
+                    .status(401)
+                    .json({
+                        message:
+                        "Authentication required."
+                    });
+            }
 
             const history =
                 await SearchHistory
-                .find(filter)
+                .find({
+                    userId:
+                    req.user.id
+                })
 
                 .sort({
                     createdAt: -1

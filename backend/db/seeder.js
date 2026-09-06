@@ -18,12 +18,10 @@ BrandSchema.index({ barcode: 1 });
 const Brand = mongoose.model("Brand", BrandSchema);
 
 const runSeeder = async () => {
-    const backupUri = "mongodb+srv://Volinipriya06:volinipriya06@ethiscan-db.dbij92s.mongodb.net/EthiScan";
-<<<<<<< HEAD
-    process.env.MONGO_URI = process.env.MONGO_URI || backupUri;
-=======
-    process.env.MONGODB_URI = process.env.MONGODB_URI || backupUri;
->>>>>>> 6add69a (Initial EthiScan Upload)
+    if (!process.env.MONGODB_URI) {
+        console.error("MONGODB_URI is required to seed the database.");
+        process.exit(1);
+    }
     
     await connectDatabase();
     

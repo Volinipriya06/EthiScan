@@ -15,7 +15,7 @@ const searchHistorySchema =
 
             ref: "User",
 
-            default: null
+            required: true
         }
 
     }, {

@@ -4,7 +4,12 @@ const fs = require("fs");
 
 const Brand = require("./models/Brand");
 
-mongoose.connect("mongodb+srv://naturereplicate8068_db_user:gMdsjmTdBpU5TIJv@cluster0.n9n43d9.mongodb.net/ethiscan?appName=Cluster0");
+if (!process.env.MONGODB_URI) {
+    console.error("MONGODB_URI is required to import brands.");
+    process.exit(1);
+}
+
+mongoose.connect(process.env.MONGODB_URI);
 
 const results = [];
 

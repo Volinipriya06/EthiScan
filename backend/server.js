@@ -43,6 +43,13 @@ app.use(express.static(path.join(__dirname, "../docs")));
 connectDatabase().catch(error => {
     console.error("Database startup error:", error.message);
 });
+function getJwtSecret() {
+    if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET is required.");
+    }
+
+    return process.env.JWT_SECRET;
+}
 function parseAuthToken(req, res, next) {
     const header = req.headers["authorization"];
     if (!header) {
@@ -58,7 +65,7 @@ function parseAuthToken(req, res, next) {
     try {
         req.user = jwt.verify(
             token,
-            process.env.JWT_SECRET || "super_secure_telemetry_jwt_token_key_1101"
+            getJwtSecret()
         );
     } catch (err) {
         req.user = null;
@@ -92,7 +99,7 @@ app.post("/api/auth/login", async (req, res) => {
         if (!match) return res.status(400).json({ message: "Invalid credentials." });
         const token = jwt.sign(
             { id: user._id.toString(), name: user.name },
-            process.env.JWT_SECRET || "super_secure_telemetry_jwt_token_key_1101",
+            getJwtSecret(),
             { expiresIn: "24h" }
         );
         res.json({ token, user: { name: user.name, email: user.email } });
@@ -184,11 +191,13 @@ app.get("/api/brands/:brandName", parseAuthToken, async (req, res) => {
         const webData = await scrapeBrandData(brandName);
         const aiAnalysis = await analyzeWithAI(brandName, webData);
         const score = Number(aiAnalysis.ethicalScore) || 0;
-        await new SearchHistory({
-            query: brandName,
-            status: score >= 70 ? "ETHICAL" : score >= 40 ? "WARNING" : "UNETHICAL",
-            userId: req.user ? req.user.id : null
-        }).save();
+        if (req.user) {
+            await new SearchHistory({
+                query: brandName,
+                status: score >= 70 ? "ETHICAL" : score >= 40 ? "WARNING" : "UNETHICAL",
+                userId: req.user.id
+            }).save();
+        }
         res.json({ success: true, source: "live_ai_analysis", brand: aiAnalysis });
     } catch (error) {
         console.error("BRAND ANALYSIS ERROR:", error);
@@ -197,8 +206,11 @@ app.get("/api/brands/:brandName", parseAuthToken, async (req, res) => {
 });
 app.get("/api/history", parseAuthToken, async (req, res) => {
     try {
-        const filter = req.user ? { userId: req.user.id } : { userId: null };
-        const history = await SearchHistory.find(filter).sort({ createdAt: -1 }).limit(200).lean();
+        if (!req.user) {
+            return res.status(401).json({ message: "Authentication required." });
+        }
+
+        const history = await SearchHistory.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(200).lean();
         res.json(history);
     } catch (error) {
         console.error("HISTORY ERROR:", error);
