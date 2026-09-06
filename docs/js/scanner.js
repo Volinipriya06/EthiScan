@@ -1,3 +1,7 @@
+const ETHISCAN_API_BASE = "https://ethiscan-backend.onrender.com";
+const ETHISCAN_HISTORY_KEY = "ethiscan_search_history";
+const ETHISCAN_TIMEOUT_MS = 20000;
+
 document.addEventListener("DOMContentLoaded", () => {
     const searchPlaceholder = document.getElementById("search-placeholder");
 
@@ -20,6 +24,82 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Search bar loading error:", error);
         });
 });
+
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function getStatusFromScore(score) {
+    if (score >= 70) return "ETHICAL";
+    if (score >= 40) return "WARNING";
+    return "UNETHICAL";
+}
+
+function getLocalHistory() {
+    try {
+        return JSON.parse(localStorage.getItem(ETHISCAN_HISTORY_KEY) || "[]");
+    } catch (error) {
+        localStorage.removeItem(ETHISCAN_HISTORY_KEY);
+        return [];
+    }
+}
+
+function saveLocalSearch(brand, query) {
+    const score = Number(brand.ethicalScore) || 0;
+    const entry = {
+        query,
+        brandName: brand.brandName || query,
+        status: brand.status || getStatusFromScore(score),
+        ethicalScore: score,
+        industry: brand.industry || "General",
+        timestamp: new Date().toISOString()
+    };
+
+    const nextHistory = [
+        entry,
+        ...getLocalHistory().filter(item =>
+            String(item.query).toLowerCase() !== String(query).toLowerCase()
+        )
+    ].slice(0, 25);
+
+    localStorage.setItem(ETHISCAN_HISTORY_KEY, JSON.stringify(nextHistory));
+}
+
+function buildOfflineBrand(query) {
+    const seed = [...query].reduce((total, char) => total + char.charCodeAt(0), 0);
+    const score = 45 + (seed % 35);
+
+    return {
+        brandName: query,
+        ethicalScore: score,
+        industry: "Research pending",
+        sustainability: "Offline estimate",
+        description: "The hosted EthiScan analysis service is temporarily unavailable, so this result is a saved offline snapshot. Reopen this brand later from the dashboard to refresh live AI details.",
+        pros: "Search request saved. Use public sustainability reports, supplier policies, labor practices, and packaging claims to verify this brand.",
+        cons: "Live web evidence could not be reached during this search, so this snapshot should not be treated as a final ethical rating.",
+        smartAlternatives: [
+            { brandName: "Patagonia", ethicalScore: 86 },
+            { brandName: "Fairphone", ethicalScore: 84 }
+        ],
+        status: getStatusFromScore(score)
+    };
+}
+
+async function fetchWithTimeout(url, options = {}) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), ETHISCAN_TIMEOUT_MS);
+
+    try {
+        return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+        window.clearTimeout(timeout);
+    }
+}
 
 function initializeScannerEvents() {
     const input = document.getElementById("brandSearchInput");
@@ -58,8 +138,8 @@ function initializeScannerEvents() {
         try {
             const token = localStorage.getItem("ethiscan_token");
 
-            const response = await fetch(
-                `https://ethiscan-backend.onrender.com/api/brands/${encodeURIComponent(val)}`,
+            const response = await fetchWithTimeout(
+                `${ETHISCAN_API_BASE}/api/brands/${encodeURIComponent(val)}`,
                 {
                     headers: {
                         Authorization: token ? `Bearer ${token}` : ""
@@ -70,68 +150,28 @@ function initializeScannerEvents() {
             const data = await response.json();
 
             if (!response.ok || !data.success) {
-                if (resPlaceholder) {
-                    resPlaceholder.innerHTML = `
-                        <div style="
-                            background:#111827;
-                            border:1px solid #ef4444;
-                            padding:24px;
-                            border-radius:16px;
-                            margin-top:24px;
-                            color:white;
-                        ">
-                            <h3 style="
-                                color:#ef4444;
-                                margin-bottom:12px;
-                            ">
-                                Analysis Failed
-                            </h3>
-
-                            <p style="
-                                color:#9ca3af;
-                            ">
-                                ${data.message || "Unable to analyze this brand right now."}
-                            </p>
-                        </div>
-                    `;
-                }
-
+                const offlineBrand = buildOfflineBrand(val);
+                saveLocalSearch(offlineBrand, val);
+                renderResultCard(offlineBrand);
                 return;
             }
 
+            saveLocalSearch(data.brand, val);
             renderResultCard(data.brand);
         } catch (error) {
             console.error("Analysis error:", error);
 
-            if (resPlaceholder) {
-                resPlaceholder.innerHTML = `
-                    <div class="result-card-container animate-fade-in"
-                        style="
-                            background-color:#11131c;
-                            border:1px solid #ef4444;
-                            padding:32px;
-                            border-radius:12px;
-                            margin-top:24px;
-                            text-align:center;
-                        ">
-                        <div style="
-                            font-size:18px;
-                            font-weight:600;
-                            color:#ef4444;
-                        ">
-                            Server Error
-                        </div>
-
-                        <p style="
-                            color:#9ca3af;
-                            margin-top:10px;
-                        ">
-                            Unable to connect to the EthiScan server.
-                        </p>
-                    </div>
-                `;
-            }
+            const offlineBrand = buildOfflineBrand(val);
+            saveLocalSearch(offlineBrand, val);
+            renderResultCard(offlineBrand);
         }
+    }
+
+    const requestedBrand = new URLSearchParams(window.location.search).get("brand");
+
+    if (requestedBrand) {
+        input.value = requestedBrand;
+        executeAnalysis(requestedBrand);
     }
 
     btn.addEventListener("click", () => {

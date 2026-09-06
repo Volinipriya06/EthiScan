@@ -311,6 +311,39 @@ body {
     border-top: 1px solid rgba(255,255,255,0.05);
 }
 
+.status-badge {
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 0.35rem 0.7rem;
+}
+
+.status-badge.ethical {
+    color: var(--green);
+}
+
+.status-badge.warning {
+    color: var(--yellow);
+}
+
+.status-badge.unethical {
+    color: var(--red);
+}
+
+.history-action-link {
+    color: #93c5fd;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.history-action-link:hover {
+    color: #bfdbfe;
+}
+
 .info-grid-section {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
