@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!searchPlaceholder) return;
 
-    const BASE_PATH = window.location.hostname === "localhost" ? "" : "/EthiScan";
+    const BASE_PATH = "";
 
     fetch(`${BASE_PATH}/components/search-bar.html`)
         .then(response => {
