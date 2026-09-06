@@ -6,7 +6,7 @@ function initializeAuthForms() {
     const loginForm = document.getElementById("loginForm");
     const registerForm = document.getElementById("registerForm");
 
-    const API_BASE = "https://ethiscan-dz9i.onrender.com";
+    const API_BASE = "https://ethiscan-backend.onrender.com";
 
     if (loginForm) {
         loginForm.addEventListener("submit", async event => {
