@@ -1,8 +1,3 @@
-// Dynamic backend routing architecture based on active runtime environment
-const API_BASE = window.location.hostname === "localhost"
-    ? "http://localhost:5000"
-    : "https://ethiscan-backend.onrender.com";
-
 document.addEventListener("DOMContentLoaded", () => {
     const searchPlaceholder = document.getElementById("search-placeholder");
 
@@ -63,9 +58,8 @@ function initializeScannerEvents() {
         try {
             const token = localStorage.getItem("ethiscan_token");
 
-            // Updated path string to route network operations dynamically using API_BASE variable
             const response = await fetch(
-                `${API_BASE}/api/brands/${encodeURIComponent(val)}`,
+                `https://ethiscan-backend.onrender.com/api/brands/${encodeURIComponent(val)}`,
                 {
                     headers: {
                         Authorization: token ? `Bearer ${token}` : ""
@@ -309,11 +303,70 @@ function renderResultCard(brand) {
                         font-size:18px;
                         margin-bottom:16px;
                         color:white;
-                ">Ethical Concerns${
-                    brand.cons || "No ethical concerns found."}
-                    ${Array.isArray(brand.smartAlternatives) &&
-                        brand.smartAlternatives.length > 0? `Better Ethical Alternatives${
-                            brand.smartAlternatives.map(item => `${item.brandName || "Unknown"}
-                                Ethical Score • ${item.ethicalScore ?? "N/A"}).join("")
-                } </div> </div> : ""}`;
+                    ">
+                        Ethical Concerns
+                    </h3>
+
+                    <div style="
+                        color:#9ca3af;
+                        line-height:1.8;
+                        font-size:14px;
+                    ">
+                        ${brand.cons || "No ethical concerns found."}
+                    </div>
+                </div>
+
+            </div>
+
+            ${
+                Array.isArray(brand.smartAlternatives) &&
+                brand.smartAlternatives.length > 0
+                    ? `
+                        <div style="margin-top:28px;">
+                            <h3 style="
+                                font-size:20px;
+                                margin-bottom:18px;
+                                color:white;
+                            ">
+                                Better Ethical Alternatives
+                            </h3>
+
+                            <div style="
+                                display:grid;
+                                grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+                                gap:16px;
+                            ">
+                                ${brand.smartAlternatives.map(item => `
+                                    <div style="
+                                        background:#151926;
+                                        border:1px solid #222838;
+                                        border-radius:16px;
+                                        padding:18px;
+                                    ">
+                                        <div style="
+                                            font-size:18px;
+                                            font-weight:600;
+                                            color:white;
+                                            margin-bottom:10px;
+                                        ">
+                                            ${item.brandName || "Unknown"}
+                                        </div>
+
+                                        <div style="
+                                            color:#10b981;
+                                            font-size:14px;
+                                            font-weight:600;
+                                        ">
+                                            Ethical Score • ${item.ethicalScore ?? "N/A"}
+                                        </div>
+                                    </div>
+                                `).join("")}
+                            </div>
+                        </div>
+                    `
+                    : ""
             }
+
+        </div>
+    `;
+}
