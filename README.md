@@ -4,8 +4,8 @@ EthiScan is an AI-powered web application that helps users understand the ethica
 
 ## 🚀 Live Demo
 
-- **Live Application:** https://vidhya1101.github.io/EthiScan/
-- **GitHub Repository:** https://github.com/Vidhya1101/EthiScan
+- **Live Application:** https://volinipriya06.github.io/EthiScan/
+- **GitHub Repository:** https://github.com/Volinipriya06/EthiScan
 > The frontend is hosted on GitHub Pages and the backend is deployed on Render. MongoDB Atlas is used for database storage.
 
 ---
@@ -28,6 +28,7 @@ EthiScan is an AI-powered web application that helps users understand the ethica
 
 ### 🔐 User Authentication
 - User registration and login.
+- Forgot-password and reset-password flow.
 - JWT-based authentication.
 - Passwords are securely hashed using bcrypt.
 
@@ -105,8 +106,8 @@ EthiScan is deployed using a separate frontend and backend architecture:
 
 | Component | Platform | Link |
 |---|---|---|
-| Frontend | GitHub Pages | https://vidhya1101.github.io/EthiScan/ |
-| Source Code | GitHub | https://github.com/Vidhya1101/EthiScan |
+| Frontend | GitHub Pages | https://volinipriya06.github.io/EthiScan/ |
+| Source Code | GitHub | https://github.com/Volinipriya06/EthiScan |
 | Database | MongoDB Atlas | Cloud database |
 
 The GitHub Pages frontend sends API requests to the Render backend. The backend communicates with MongoDB Atlas, Serper, and OpenRouter to process brand searches and store authenticated users' search history.
@@ -118,7 +119,7 @@ The GitHub Pages frontend sends API requests to the Render backend. The backend 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Vidhya1101/EthiScan.git
+git clone https://github.com/Volinipriya06/EthiScan.git
 cd EthiScan
 ```
 
@@ -177,6 +178,8 @@ EthiScan/
 │   ├── components/
 │   ├── index.html
 │   ├── login.html
+│   ├── forgot-password.html
+│   ├── reset-password.html
 │   ├── dashboard.html
 │   └── register.html
 │
@@ -219,6 +222,6 @@ EthiScan/
 
 **EthiScan — AI-Powered Ethical Brand Intelligence Platform**
 
-GitHub: https://github.com/Vidhya1101/EthiScan
+GitHub: https://github.com/Volinipriya06/EthiScan
 
-Live Demo: https://vidhya1101.github.io/EthiScan/
+Live Demo: https://volinipriya06.github.io/EthiScan/

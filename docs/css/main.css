@@ -117,6 +117,55 @@ body {
     text-decoration: none;
 }
 
+.auth-inline-row {
+    display: flex;
+    justify-content: flex-end;
+    margin: -8px 0 16px;
+}
+
+.auth-inline-row a {
+    color: var(--accent-blue);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-message {
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--text-muted);
+    display: none;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    overflow-wrap: anywhere;
+}
+
+.auth-message.info,
+.auth-message.success,
+.auth-message.error {
+    display: block;
+}
+
+.auth-message.info {
+    background: rgba(77, 97, 252, 0.1);
+    border-color: rgba(77, 97, 252, 0.35);
+    color: #c7d2fe;
+}
+
+.auth-message.success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #a7f3d0;
+}
+
+.auth-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fecaca;
+}
+
 .landing-container, .dashboard-container {
     max-width: 1200px;
     margin: 0 auto;

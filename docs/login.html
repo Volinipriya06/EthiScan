@@ -11,6 +11,7 @@
     <div class="auth-container">
         <h2>Welcome back</h2>
         <p class="auth-subtitle">Sign in to your EthiScan account</p>
+        <div id="authMessage" class="auth-message" aria-live="polite"></div>
         <form id="loginForm">
             <div class="form-group">
                 <label>EMAIL ADDRESS</label>
@@ -19,6 +20,9 @@
             <div class="form-group">
                 <label>PASSWORD</label>
                 <input type="password" id="loginPassword" placeholder="Enter your password" required>
+            </div>
+            <div class="auth-inline-row">
+                <a href="forgot-password.html">Forgot password?</a>
             </div>
             <button type="submit" class="auth-btn">→ Sign In</button>
             <div class="auth-footer">

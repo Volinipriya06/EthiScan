@@ -7,6 +7,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const connectDatabase = require("./db/connection");
 const User = require("./models/User");
 const SearchHistory = require("./models/SearchHistory");
@@ -14,7 +15,8 @@ const scrapeBrandData = require("./services/webScraper");
 const analyzeWithAI = require("./services/aiAnalyzer");
 const app = express();
 const allowedOrigins = [
-    "https://vidhya1101.github.io",
+    "https://volinipriya06.github.io",
+    "https://Volinipriya06.github.io",
     "http://localhost:5000",
     "http://127.0.0.1:5000"
 ];
@@ -97,6 +99,77 @@ app.post("/api/auth/login", async (req, res) => {
     } catch (err) {
         console.error("LOGIN ERROR:", err);
         res.status(500).json({ message: "Login failed." });
+    }
+});
+app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Email is required." });
+        }
+
+        const user = await User.findOne({ email });
+        const message = "If this email belongs to an EthiScan account, a reset link has been prepared.";
+
+        if (!user) {
+            return res.json({ success: true, message });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        user.resetPasswordToken = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+        user.resetPasswordExpires = Date.now() + 1000 * 60 * 30;
+        await user.save();
+
+        const frontendUrl = process.env.FRONTEND_URL || "https://volinipriya06.github.io/EthiScan";
+        const resetLink = `${frontendUrl}/reset-password.html?token=${resetToken}`;
+
+        console.log(`Password reset link for ${email}: ${resetLink}`);
+
+        res.json({ success: true, message, resetLink });
+    } catch (err) {
+        console.error("FORGOT PASSWORD ERROR:", err);
+        res.status(500).json({ success: false, message: "Could not prepare password reset." });
+    }
+});
+app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        if (!token || !password) {
+            return res.status(400).json({ success: false, message: "Reset token and new password are required." });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
+        }
+
+        const resetPasswordToken = crypto
+            .createHash("sha256")
+            .update(token)
+            .digest("hex");
+
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Reset link is invalid or expired." });
+        }
+
+        user.password = await bcrypt.hash(password, 10);
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+        await user.save();
+
+        res.json({ success: true, message: "Password reset successful. Please sign in." });
+    } catch (err) {
+        console.error("RESET PASSWORD ERROR:", err);
+        res.status(500).json({ success: false, message: "Password reset failed." });
     }
 });
 app.get("/api/brands/:brandName", parseAuthToken, async (req, res) => {
